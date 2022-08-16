@@ -1,7 +1,7 @@
 const User = require("../models/user"),
   { StatusCodes } = require("http-status-codes"),
   CustomError = require("../errors"),
-  { attachCookieToResponse } = require("../utils");
+  { attachCookieToResponse, createTokenUser } = require("../utils");
 
 module.exports = {
   register: async (req, res) => {
@@ -11,7 +11,7 @@ module.exports = {
     const role = isFirstUser ? "admin" : "user";
 
     const user = await User.create({ name, email, password, role });
-    const tokenUser = { name: user.name, userId: user._id, role: user.role };
+    const tokenUser = createTokenUser(user);
 
     attachCookieToResponse(res, tokenUser);
     res.status(StatusCodes.CREATED).send({ user: tokenUser });
@@ -23,7 +23,7 @@ module.exports = {
     if (!email || !password) throw new CustomError.BadRequestError("Please provide email and password");
 
     const user = await User.login(email, password);
-    const tokenUser = { name: user.name, userId: user._id, role: user.role };
+    const tokenUser = createTokenUser(user);
 
     attachCookieToResponse(res, tokenUser);
     res.status(StatusCodes.OK).send({ user: tokenUser });
